@@ -108,7 +108,7 @@ class Classifier_Module(nn.Module):
         super(Classifier_Module, self).__init__()
         self.conv2d_list = nn.ModuleList()
         for dilation, padding in zip(dilation_series, padding_series):
-            self.conv2d_list.append(nn.Conv2d(2048, num_classes, kernel_size=3, stride=1, padding=padding, dilation=dilation, bias = True))
+            self.conv2d_list.append(nn.Conv2d(512, num_classes, kernel_size=3, stride=1, padding=padding, dilation=dilation, bias = True))  #512
 
         for m in self.conv2d_list:
             m.weight.data.normal_(0, 0.01)
@@ -125,7 +125,7 @@ class ResNet(nn.Module):
     def __init__(self, block, layers, num_classes):
         self.inplanes = 64
         super(ResNet, self).__init__()
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
+        self.conv1 = nn.Conv2d(110, 64, kernel_size=7, stride=2, padding=3,
                                bias=False)
         self.bn1 = nn.BatchNorm2d(64, affine = affine_par)
         for i in self.bn1.parameters():
@@ -134,8 +134,9 @@ class ResNet(nn.Module):
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1, ceil_mode=True) # change
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=1, dilation=2)
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilation=4)
+        #self.layer3 = self._make_layer(block, 256, layers[2], stride=1, dilation=2)
+        #self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilation=4)
+        #self.deconv = nn.ConvTranspose2d(512, 256, kernel_size=5, stride=1, padding=6, dilation=6)
         self.layer5 = self._make_pred_layer(Classifier_Module, [6,12,18,24],[6,12,18,24],num_classes)
 
         for m in self.modules():
@@ -174,8 +175,9 @@ class ResNet(nn.Module):
         x = self.maxpool(x)
         x = self.layer1(x)
         x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
+        #x = self.layer3(x)
+        #x = self.layer4(x)
+        #x = self.deconv(x)
         x = self.layer5(x)
 
         return x
@@ -193,8 +195,8 @@ class ResNet(nn.Module):
         b.append(self.bn1)
         b.append(self.layer1)
         b.append(self.layer2)
-        b.append(self.layer3)
-        b.append(self.layer4)
+        #b.append(self.layer3)
+        #b.append(self.layer4)
 
     
         for i in range(len(b)):
@@ -224,7 +226,7 @@ class ResNet(nn.Module):
                 {'params': self.get_10x_lr_params(), 'lr': 10*args.learning_rate}] 
 
 
-def Res_Deeplab(num_classes=21):
+def Res_Deeplab(num_classes=15):
     model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes)
     return model
 

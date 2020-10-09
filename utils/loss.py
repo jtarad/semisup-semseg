@@ -22,11 +22,11 @@ class CrossEntropy2d(nn.Module):
         assert predict.dim() == 4
         assert target.dim() == 3
         n, c, h, w = predict.size()
-        target_mask = (target >= 0) * (target != self.ignore_label)
+        target_mask = (target != self.ignore_label) # * (target >= 0)
         target = target[target_mask]
         if not target.data.dim():
             return Variable(torch.zeros(1))
         predict = predict.transpose(1, 2).transpose(2, 3).contiguous()
         predict = predict[target_mask.view(n, h, w, 1).repeat(1, 1, 1, c)].view(-1, c)
-        loss = F.cross_entropy(predict, target, weight=weight, reduction='elementwise_mean')
+        loss = F.cross_entropy(predict, target, weight=weight, reduction='mean')
         return loss
